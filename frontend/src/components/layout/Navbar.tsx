@@ -35,6 +35,8 @@ import {
   PersonAdd as PersonAddIcon
 } from '@mui/icons-material';
 import { useAuth } from '../../context/AuthContext';
+import { useTranslation } from 'react-i18next';
+import LanguageSwitcher from '../language/LanguageSwitcher';
 
 const Navbar: React.FC = () => {
   const { user, logout } = useAuth();
@@ -42,6 +44,7 @@ const Navbar: React.FC = () => {
   const location = useLocation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const { t } = useTranslation();
   
   // Paskyros meniu
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
@@ -80,8 +83,8 @@ const Navbar: React.FC = () => {
   
   // Navigacijos elementai
   const navItems = [
-    { text: 'Pagrindinis', path: '/', icon: <HomeIcon /> },
-    { text: 'Pasiūlymai', path: '/proposals', icon: <HowToVoteIcon /> },
+    { text: t('navigation.home'), path: '/', icon: <HomeIcon /> },
+    { text: t('navigation.proposals'), path: '/proposals', icon: <HowToVoteIcon /> },
   ];
   
   // Nuorodos paspaudimas
@@ -102,7 +105,7 @@ const Navbar: React.FC = () => {
     >
       <Box sx={{ p: 2, textAlign: 'center' }}>
         <Typography variant="h6" component="div">
-          SocioDecisionMakingApp
+          {t('common.appName')}
         </Typography>
       </Box>
       <Divider />
@@ -135,7 +138,7 @@ const Navbar: React.FC = () => {
               <ListItemIcon>
                 <LoginIcon />
               </ListItemIcon>
-              <ListItemText primary="Prisijungti" />
+              <ListItemText primary={t('auth.login')} />
             </ListItem>
             <ListItem 
               button 
@@ -146,7 +149,7 @@ const Navbar: React.FC = () => {
               <ListItemIcon>
                 <PersonAddIcon />
               </ListItemIcon>
-              <ListItemText primary="Registruotis" />
+              <ListItemText primary={t('auth.register')} />
             </ListItem>
           </>
         ) : (
@@ -165,11 +168,15 @@ const Navbar: React.FC = () => {
               <ListItemIcon>
                 <LogoutIcon />
               </ListItemIcon>
-              <ListItemText primary="Atsijungti" />
+              <ListItemText primary={t('auth.logout')} />
             </ListItem>
           </>
         )}
       </List>
+      <Divider />
+      <Box sx={{ p: 2 }}>
+        <LanguageSwitcher />
+      </Box>
     </Box>
   );
   
@@ -200,7 +207,7 @@ const Navbar: React.FC = () => {
               flexGrow: { xs: 1, md: 0 }
             }}
           >
-            SocioDecisionMakingApp
+            {t('common.appName')}
           </Typography>
           
           {!isMobile && (
@@ -223,54 +230,49 @@ const Navbar: React.FC = () => {
             </Box>
           )}
           
-          {!user ? (
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-              <Button 
-                color="inherit" 
-                component={RouterLink} 
-                to="/login"
-                sx={{ ml: 1 }}
-              >
-                Prisijungti
-              </Button>
-              <Button 
-                color="inherit" 
-                component={RouterLink} 
-                to="/register"
-                sx={{ ml: 1 }}
-              >
-                Registruotis
-              </Button>
-            </Box>
-          ) : (
-            <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
-              <Tooltip title="Paskyros nustatymai">
-                <IconButton
-                  onClick={handleMenuOpen}
-                  size="small"
-                  sx={{ ml: 2 }}
-                  aria-controls={menuOpen ? 'account-menu' : undefined}
-                  aria-haspopup="true"
-                  aria-expanded={menuOpen ? 'true' : undefined}
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            {/* Kalbos perjungimo komponentas */}
+            <LanguageSwitcher />
+            
+            {!user ? (
+              <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+                <Button 
+                  color="inherit" 
+                  component={RouterLink} 
+                  to="/login"
+                  sx={{ ml: 1 }}
                 >
-                  <Avatar sx={{ width: 32, height: 32, bgcolor: 'secondary.main' }}>
-                    {user.name.charAt(0)}
-                  </Avatar>
-                </IconButton>
-              </Tooltip>
-            </Box>
-          )}
+                  {t('auth.login')}
+                </Button>
+                <Button 
+                  color="inherit" 
+                  component={RouterLink} 
+                  to="/register"
+                  sx={{ ml: 1 }}
+                >
+                  {t('auth.register')}
+                </Button>
+              </Box>
+            ) : (
+              <Box sx={{ display: { xs: 'none', md: 'flex' } }}>
+                <Tooltip title={t('navigation.profile')}>
+                  <IconButton
+                    onClick={handleMenuOpen}
+                    size="small"
+                    sx={{ ml: 2 }}
+                    aria-controls={menuOpen ? 'account-menu' : undefined}
+                    aria-haspopup="true"
+                    aria-expanded={menuOpen ? 'true' : undefined}
+                  >
+                    <Avatar sx={{ width: 32, height: 32 }}>
+                      {user.name ? user.name.charAt(0).toUpperCase() : <AccountCircle />}
+                    </Avatar>
+                  </IconButton>
+                </Tooltip>
+              </Box>
+            )}
+          </Box>
           
-          {/* Mobilusis navigacijos stalčius */}
-          <Drawer
-            anchor="left"
-            open={drawerOpen}
-            onClose={toggleDrawer(false)}
-          >
-            {drawerContent}
-          </Drawer>
-          
-          {/* Paskyros meniu */}
           <Menu
             anchorEl={anchorEl}
             id="account-menu"
@@ -306,31 +308,26 @@ const Navbar: React.FC = () => {
             transformOrigin={{ horizontal: 'right', vertical: 'top' }}
             anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
           >
-            <MenuItem>
-              <ListItemIcon>
-                <PersonIcon fontSize="small" />
-              </ListItemIcon>
-              <Typography variant="inherit" noWrap>
-                {user?.name}
-              </Typography>
+            <MenuItem component={RouterLink} to="/profile">
+              <Avatar />
+              {t('navigation.profile')}
             </MenuItem>
             <Divider />
-            <MenuItem onClick={() => {
-              handleMenuClose();
-              navigate('/profile');
-            }}>
-              <ListItemIcon>
-                <SettingsIcon fontSize="small" />
-              </ListItemIcon>
-              Mano profilis
-            </MenuItem>
             <MenuItem onClick={handleLogout}>
               <ListItemIcon>
                 <LogoutIcon fontSize="small" />
               </ListItemIcon>
-              Atsijungti
+              {t('auth.logout')}
             </MenuItem>
           </Menu>
+          
+          <Drawer
+            anchor="left"
+            open={drawerOpen}
+            onClose={toggleDrawer(false)}
+          >
+            {drawerContent}
+          </Drawer>
         </Toolbar>
       </Container>
     </AppBar>

@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
 import axios from 'axios';
+import api from '../services/api';
 
 interface User {
   _id: string;
@@ -20,8 +21,8 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Naudojame tiesioginį URL vietoj process.env
-const API_URL = 'http://localhost:5000/api';
+// API URL iš aplinkos kintamųjų
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
@@ -47,7 +48,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setError(null);
       
-      const response = await axios.post(`${API_URL}/users/login`, { email, password });
+      const response = await api.post(`/api/users/login`, { email, password });
       const loggedInUser = response.data;
       
       setUser(loggedInUser);
@@ -69,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       setError(null);
       
-      const response = await axios.post(`${API_URL}/users/register`, { name, email, password });
+      const response = await api.post(`/api/users/register`, { name, email, password });
       const registeredUser = response.data;
       
       setUser(registeredUser);

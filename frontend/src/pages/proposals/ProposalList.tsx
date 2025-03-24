@@ -144,9 +144,9 @@ const ProposalList: React.FC = () => {
         setCircles(uniqueCircles as string[]);
         
         setError(null);
-      } catch (err: any) {
-        console.error('Error fetching proposals:', err);
-        setError(err.response?.data?.message || 'Nepavyko gauti pasiūlymų sąrašo');
+      } catch (error) {
+        console.error('Klaida gaunant pasiūlymus:', error);
+        setError('Nepavyko gauti pasiūlymų sąrašo');
       } finally {
         setLoading(false);
       }

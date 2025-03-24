@@ -66,7 +66,8 @@ const ProposalCreate: React.FC = () => {
     const fetchInitialData = async () => {
       try {
         setLoading(true);
-        // Gauti visus vartotojus
+        
+        // Gauti vartotojų sąrašą
         const usersResponse = await api.get('/api/users');
         setAvailableUsers(usersResponse.data || []);
         

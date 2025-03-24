@@ -128,6 +128,11 @@ interface Proposal {
   deadline?: string;
 }
 
+interface VoteData {
+  decision: 'consent' | 'object' | 'block';
+  reason?: string;
+}
+
 const ProposalDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -141,7 +146,7 @@ const ProposalDetail: React.FC = () => {
   
   // Balsavimo būsena
   const [voteDialogOpen, setVoteDialogOpen] = useState<boolean>(false);
-  const [decision, setDecision] = useState<string>('consent');
+  const [decision, setDecision] = useState<VoteData['decision']>('consent');
   const [reason, setReason] = useState<string>('');
   const [voting, setVoting] = useState<boolean>(false);
   
@@ -242,7 +247,11 @@ const ProposalDetail: React.FC = () => {
   const getUserVote = () => {
     if (!proposal || !user) return null;
     
-    return proposal.votes.find((v: any) => v.user._id === user._id);
+    const userVote = proposal.votes.find((v: any) => v.user._id === user._id);
+    if (userVote && (userVote.decision === 'consent' || userVote.decision === 'object' || userVote.decision === 'block')) {
+      return userVote;
+    }
+    return null;
   };
   
   // Gauti galimus būsenos keitimo variantus
@@ -299,7 +308,11 @@ const ProposalDetail: React.FC = () => {
     const userVote = getUserVote();
     
     if (userVote) {
-      setDecision(userVote.decision);
+      if (userVote.decision === 'consent' || userVote.decision === 'object' || userVote.decision === 'block') {
+        setDecision(userVote.decision as VoteData['decision']);
+      } else {
+        setDecision('consent');
+      }
       setReason(userVote.reason || '');
     } else {
       setDecision('consent');
@@ -549,16 +562,15 @@ const ProposalDetail: React.FC = () => {
   };
   
   // Fasilitatoriaus keitimas
-  const handleChangeFacilitator = async (user: User) => {
+  const handleSetFacilitator = async () => {
+    if (!user) return;
+
     try {
       await api.put(`/api/proposals/${id}/facilitator`, { userId: user._id });
-      
-      // Atnaujinti pasiūlymą
       const response = await api.get(`/api/proposals/${id}`);
       setProposal(response.data.data);
-    } catch (err: any) {
-      console.error('Error changing facilitator:', err);
-      setError(err.response?.data?.message || 'Nepavyko pakeisti fasilitatoriaus');
+    } catch (error) {
+      console.error('Klaida nustatant moderatoriaus statusą:', error);
     }
   };
   
@@ -805,7 +817,7 @@ const ProposalDetail: React.FC = () => {
                       {proposal.facilitator?._id !== participant._id && (
                         <Button 
                           size="small" 
-                          onClick={() => handleChangeFacilitator(participant)}
+                          onClick={() => handleSetFacilitator()}
                           sx={{ mr: 1, fontSize: '0.7rem' }}
                         >
                           Skirti fasilitatoriumi
@@ -938,8 +950,11 @@ const ProposalDetail: React.FC = () => {
           
           <FormControl component="fieldset" sx={{ mt: 2 }}>
             <RadioGroup
-              value={decision}
-              onChange={(e) => setDecision(e.target.value)}
+              value={decision as VoteData['decision']}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
+                const value = e.target.value as VoteData['decision'];
+                setDecision(value);
+              }}
             >
               <FormControlLabel
                 value="consent"
@@ -962,12 +977,12 @@ const ProposalDetail: React.FC = () => {
                 }
               />
               <FormControlLabel
-                value="abstain"
+                value="block"
                 control={<Radio />}
                 label={
                   <Box sx={{ display: 'flex', alignItems: 'center' }}>
                     <RemoveCircleOutlineIcon color="warning" sx={{ mr: 1 }} />
-                    <Typography>Susilaikau – Neturiu nuomonės arba pasitikiu grupe</Typography>
+                    <Typography>Blokuoju – Turiu rimtų argumentų prieš</Typography>
                   </Box>
                 }
               />

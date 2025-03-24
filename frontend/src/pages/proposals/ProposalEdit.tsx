@@ -162,9 +162,13 @@ const ProposalEdit: React.FC = () => {
         deadline: deadline ? deadline.toISOString() : undefined
       };
       
-      await api.put(`/api/proposals/${id}`, updatedProposal);
-      
-      navigate(`/proposals/${id}`);
+      if (id) {
+        await api.put(`/api/proposals/${id}`, updatedProposal);
+        navigate(`/proposals/${id}`);
+      } else {
+        await api.post('/api/proposals', updatedProposal);
+        navigate('/proposals');
+      }
     } catch (err: any) {
       console.error('Error updating proposal:', err);
       setError(err.response?.data?.message || 'Nepavyko atnaujinti pasiūlymo');

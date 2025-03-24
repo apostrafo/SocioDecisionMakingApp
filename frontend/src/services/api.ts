@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Tiesioginis API URL
-const API_URL = 'http://localhost:5000';
+const API_URL = 'http://localhost:5001';
 
 // Axios instancijos sukūrimas
 const api = axios.create({
